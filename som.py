@@ -1,12 +1,12 @@
 from neuron import *
 
 """
-  Self Organizig Map (SOM) algorithm implementation.
+  Self Organizing Map (SOM) algorithm implementation.
 
   Example:
-    # Create a SOM instance of 20x20 dimensions with 4 inputs nodes
+    # Create a SOM instance of 20x20 dimensions with 4 input nodes
     som = SOM(shape=(20,20), input_size=4)
-    # Load training date
+    # Load training data
     data = np.genfromtxt("train-data.csv")
     # Train the map with 1000 epochs
     som.train(data, epochs=1000)
@@ -14,7 +14,7 @@ from neuron import *
 class SOM(object):
   """
     Initializes a SOM instance.
-    `shape` is a tuple representing the dimension of map,
+    `shape` is a tuple representing dimensions of a map,
     `input_size` determines a number of input nodes
   """
   def __init__(self, shape, input_size):
@@ -22,8 +22,8 @@ class SOM(object):
     self._map = self.rand_map(shape, input_size)
 
   """
-    Generates a map of neurons of a given `shape` with a
-    given amount `input_size` of input nodes
+    Returns a neuron map of given `shape` with an
+    `input_size` amount of input nodes
   """
   @staticmethod
   def rand_map(shape, input_size):
@@ -34,14 +34,14 @@ class SOM(object):
     ]
 
   """
-    Normalizes a vector
+    Returns a normalized `vector`
   """
   @staticmethod
   def normalize(vector):
     return vector / sum(vector)
 
   """
-    Returns a shape of a map
+    Returns a shape of a neuron map
   """
   def shape(self):
     return self._shape
@@ -53,17 +53,18 @@ class SOM(object):
     return self._map
 
   """
-    Finds the most similar neuron to the `target_vector` in a map.
+    Finds the most similar neuron (`bmu`) to the `target_vector` in a map.
     Search is based on neuron weights and is computed using the
     Euclidean distance for vectors.
+    Returns a tuple (`bmu`, `distance_from_bmu`, `distances_to_other_neurons`)
   """
   def find_bmu(self, target_vector):
     dists = [n.euclidean_distance(target_vector) for n in self._map]
     bmu = np.argmin(dists)
-    return (self._map[bmu], dists[bmu], dists)
+    return self._map[bmu], dists[bmu], dists
 
   """
-    Computes the radius around the most similar neuron depending on
+    Returns the radius around the most similar neuron (`bmu`) depending on
     a current `timestamp` and a number of training `epochs`
   """
   def bmu_radius(self, timestamp, epochs):
@@ -72,7 +73,7 @@ class SOM(object):
     return map_radius * np.exp(-timestamp / time_const)
 
   """
-    Returns the neurons that fall within the `radius` from a given node
+    Returns the neurons that fall within the `radius` from a given node `bmu`
   """
   def neurons_near_bmu(self, bmu, radius):
     return [n for n in self._map if n.is_within_radius(bmu, radius)]
@@ -80,7 +81,7 @@ class SOM(object):
   """
     Performs a single training epoch for a given `target_vector` at a given
     `timestamp` with a provided number of `epochs` and a `learning_rate`.
-    Note: Mutates the neuron weigts.
+    Note: Mutates the neuron weights.
   """
   def epoch(self, target_vector, timestamp, epochs, learning_rate):
     bmu, _, _ = self.find_bmu(target_vector)
@@ -91,7 +92,7 @@ class SOM(object):
       n.update_weights(target_vector, influence, learning_rate)
 
   """
-    Trains a map by randomly selecting `data` vectors. Traning is done
+    Trains a map by randomly selecting `data` vectors. Training is done
     in a given number of `epochs` with a given `learning_rate`
   """
   def train(self, data, epochs, learning_rate=0.1):
@@ -101,8 +102,8 @@ class SOM(object):
 
   """
     Tests the map by guessing classes for testing `data`.
-    Returns a tuple with a matrix containing predicted classes and local quantization
-    errors and an average quantization error
+    Returns a tuple (`matrix_with_predicted_classes_and_local_quantization_errors`
+    and an average `quantization_error` for the whole map
   """
   def test(self, data):
     result_map = np.empty(self._shape, dtype=tuple)
